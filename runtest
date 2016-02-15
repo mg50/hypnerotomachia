@@ -2,7 +2,7 @@
 
 time=0
 while true; do
-  newtime=$(find ./*/*.hs -exec stat -f "%m" \{} \; | sort -n -r | head -1)
+  newtime=$(find ./src ./test -name "[A-Z]*.hs" -exec stat -f "%m" \{} \; | sort -n -r | head -1)
   if [ "$newtime" -gt "$time" ]; then
     clear
     stack test

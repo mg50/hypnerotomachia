@@ -1,7 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 module Pronunciation where
 import Text.Regex.PCRE
---import qualified Data.Map as M
 
 type Phoneme = String
 type Pronunciation = [Phoneme]

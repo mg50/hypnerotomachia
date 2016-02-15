@@ -12,6 +12,7 @@ import Data.List
 import Pronunciation
 import Dictionary
 import Scansion
+import Rhyme
 
 main :: IO ()
 main = do
@@ -21,7 +22,9 @@ main = do
   putStrLn "Loading dictionary into memory..."
   let dictEntries = map parseLine pronunciationLines
       wordIsCommon (word,_) = Set.member word commonWords
-      dict = createDictionary (filter wordIsCommon dictEntries)
+      commonEntries = (filter wordIsCommon dictEntries)
+      dict = createDictionary commonEntries
+--      trie = createRhymeTrie commonEntries
   dict `seq` putStrLn "Load complete."
 
   forM_ [1..14] $ \_ -> do
@@ -30,6 +33,24 @@ main = do
 
     words <- forM template (getRandomWordWithStresses dict)
     putStrLn (format words)
+
+go = do
+  commonWords <- fmap (Set.fromList . lines) $ readFile "./resources/common_words.txt"
+  pronunciationLines <- fmap lines $ readFile "./resources/cmudict.txt"
+  let dictEntries = map parseLine pronunciationLines
+      wordIsCommon (word,_) = Set.member word commonWords
+      commonEntries = (filter wordIsCommon dictEntries)
+      trie = createRhymeTrie commonEntries
+  print "building trie"
+  trie `seq` print "done"
+
+  forM_ [1..1000] $ \_ -> do
+    gen <- fmap mkStdGen randomIO
+    let result = evalTraversal gen trie getRhymes
+    case result of
+      Just vals -> print vals
+      Nothing -> return ()
+
 
 format :: [String] -> String
 format words = intercalate " " words
