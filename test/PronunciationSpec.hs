@@ -34,3 +34,7 @@ spec = do
     it "parses 'windowpanes'" $ do
       stressPattern (parsePhonemes "W IH1 N D OW0 P EY2 N Z")
         `shouldBe` [Long, Short, Long]
+
+    it "parses 'possibility'" $ do
+      stressPattern (parsePhonemes " P AA2 S AH0 B IH1 L AH0 T IY2")
+        `shouldBe` [Long, Short, Long, Short, Long]

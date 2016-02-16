@@ -42,22 +42,6 @@ generateRhymingPairs gen trie =
           then ((word1,s1), (word2, s2))
           else generateRhymingPairs gen' trie
 
--- go = do
---   commonWords <- fmap (Set.fromList . lines) $ readFile "./resources/common_words.txt"
---   pronunciationLines <- fmap lines $ readFile "./resources/cmudict.txt"
---   let dictEntries = map parseLine pronunciationLines
---       wordIsCommon (word,_) = Set.member word commonWords
---       commonEntries = (filter wordIsCommon dictEntries)
---       trie = createRhymeTrie commonEntries
---   print "building trie"
---   trie `seq` print "done"
-
---   forM_ [1..10] $ \_ -> do
---     gen <- fmap mkStdGen randomIO
---     let result = generateRhymingPairs gen trie
---     print result
-
-
 format :: [String] -> String
 format words = intercalate " " words
 
