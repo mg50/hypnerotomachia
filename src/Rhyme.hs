@@ -106,7 +106,7 @@ goToRandomTerminalVowelNode = do
                                  return Nothing
 
             -- Node is a word starting with a vowel
-            (True, Just v, cs) -> do r <- getRandom (0, 3)
+            (True, Just v, cs) -> do r <- getRandom (0, 9)
                                      if r == 0
                                        then return (Just v)
                                        else do goToRandomChild
