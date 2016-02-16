@@ -12,19 +12,15 @@ type Weights = [(Double, [Stress])]
 syllablesPerLine :: Int
 syllablesPerLine = 10
 
--- Generates iambic pentameter word template.
-scansionTemplate :: StdGen -> ([[Stress]], StdGen)
-scansionTemplate = scansionTemplate' 10
-
-scansionTemplate' :: Int -> StdGen -> ([[Stress]], StdGen)
-scansionTemplate' 0 gen = ([], gen)
-scansionTemplate' syllables gen = (stresses:restStresses, gen'')
-  where weights = if even syllables then shortWeights else longWeights
+scansionTemplate :: Int -> StdGen -> ([[Stress]], StdGen)
+scansionTemplate 0 gen = ([], gen)
+scansionTemplate syllables gen = (stresses:restStresses, gen'')
+  where weights = if even syllables then longWeights else shortWeights
         longestPossible = last . sort $ map (length . snd) weights
         limit = min syllables longestPossible
         validWeights = filter (\(_, pat) -> length pat <= limit) weights
         (stresses, gen') = selectRandomlyFrom validWeights gen
-        (restStresses, gen'') = scansionTemplate' (syllables - length stresses) gen'
+        (restStresses, gen'') = scansionTemplate (syllables - length stresses) gen'
 
 selectRandomlyFrom :: Weights -> StdGen -> ([Stress], StdGen)
 selectRandomlyFrom options gen =

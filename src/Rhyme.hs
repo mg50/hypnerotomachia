@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-module Rhyme (createRhymeTrie, getRhymes, evalTraversal) where
+module Rhyme (createRhymeTrie, getRhymes, runTraversal, TraversalState(..)) where
 import Pronunciation
 
 import qualified Data.List as L
@@ -14,7 +14,7 @@ import Control.Monad
 import Control.Monad.State
 import System.Random
 
-type RhymeTrie = T.Trie RhymeSound String
+type RhymeTrie = T.Trie RhymeSound (String, Pronunciation)
 data RhymeSound = Vowel String Stress | Consonant String deriving (Show, Eq, Ord)
 
 data TraversalState = TraversalState { currentNode :: RhymeTrie
@@ -29,7 +29,7 @@ type TraversalM = State TraversalState
 
 createRhymeTrie :: [(String, Pronunciation)] -> RhymeTrie
 createRhymeTrie pairs =
-  let mapper (word, pron) = (reverse (rhymeSounds pron), word)
+  let mapper (word, pron) = (reverse (rhymeSounds pron), (word, pron))
       pairs' = map mapper pairs
   in T.fromList pairs'
 
@@ -49,10 +49,10 @@ rhymeSounds pron = go pron (stressPattern pron)
 -- Random rhyme trie traversal
 --------------------------------------------------------------------------------
 
-evalTraversal :: StdGen -> RhymeTrie -> TraversalM a -> a
-evalTraversal gen trie m = evalState m (TraversalState trie gen)
+runTraversal :: StdGen -> RhymeTrie -> TraversalM a -> (a, TraversalState)
+runTraversal gen trie m = runState m (TraversalState trie gen)
 
---getRhymes :: TraversalM (Maybe (String, String))
+getRhymes :: TraversalM (Maybe ((String, Pronunciation), (String, Pronunciation)))
 getRhymes = do
   result <- goToRandomTerminalVowelNode
   current <- gets currentNode
@@ -69,7 +69,7 @@ getRhymes = do
              goToRandomLeaf
              current <- gets currentNode
              case T.value current of
-               Just word -> return word
+               Just val -> return val
                Nothing -> error "should not reach here!"
 
 goToRandomLeaf :: TraversalM ()
@@ -86,7 +86,7 @@ goToRandomLeaf = do
              goToRandomLeaf
 
 -- A terminal vowel node either starts a word or has no vowel descendants
-goToRandomTerminalVowelNode :: TraversalM (Maybe String)
+goToRandomTerminalVowelNode :: TraversalM (Maybe (String, Pronunciation))
 goToRandomTerminalVowelNode = do
   goToRandomVowel
   current <- gets currentNode
@@ -106,7 +106,7 @@ goToRandomTerminalVowelNode = do
                                  return Nothing
 
             -- Node is a word starting with a vowel
-            (True, Just v, cs) -> do r <- getRandom (0, 1)
+            (True, Just v, cs) -> do r <- getRandom (0, 3)
                                      if r == 0
                                        then return (Just v)
                                        else do goToRandomChild

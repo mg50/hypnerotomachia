@@ -10,6 +10,6 @@ spec :: Spec
 spec = do
   describe "scansionTemplate" $ do
     it "creates templates with the correct length" $ do
-      let results = map scansionTemplate $ map mkStdGen [100..200]
+      let results = map (scansionTemplate syllablesPerLine) $ map mkStdGen [100..200]
       forM_ results $ \(result, _) -> do
         length (concat result) `shouldBe` syllablesPerLine

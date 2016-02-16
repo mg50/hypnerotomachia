@@ -1,18 +1,24 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
-import Text.Regex.PCRE
-import qualified Data.Map as M
-import Data.Char
-import System.Random
+
+import Web.Scotty
+
 import Control.Monad
-import qualified Data.Sequence as S
+import Text.Regex.PCRE
+import Data.Char
+import Control.Monad
+import Control.Monad.IO.Class
+import System.Environment (getEnv)
+import Network.Wai.Middleware.RequestLogger (logStdoutDev)
+
 import qualified Data.Set as Set
-import Data.List
+import qualified Data.Text.Lazy as Text
 
 import Pronunciation
 import Dictionary
-import Scansion
 import Rhyme
+import Sonnet
+
 
 main :: IO ()
 main = do
@@ -24,47 +30,21 @@ main = do
       wordIsCommon (word,_) = Set.member word commonWords
       commonEntries = (filter wordIsCommon dictEntries)
       dict = createDictionary commonEntries
---      trie = createRhymeTrie commonEntries
+      trie = createRhymeTrie commonEntries
   dict `seq` putStrLn "Load complete."
 
-  forM_ [1..14] $ \_ -> do
-    gen <- getStdGen
-    let (template, _) = scansionTemplate gen
+  print "Loading rhyme trie into memory..."
+  trie `seq` print "Load complete."
 
-    words <- forM template (getRandomWordWithStresses dict)
-    putStrLn (format words)
-
-go = do
-  commonWords <- fmap (Set.fromList . lines) $ readFile "./resources/common_words.txt"
-  pronunciationLines <- fmap lines $ readFile "./resources/cmudict.txt"
-  let dictEntries = map parseLine pronunciationLines
-      wordIsCommon (word,_) = Set.member word commonWords
-      commonEntries = (filter wordIsCommon dictEntries)
-      trie = createRhymeTrie commonEntries
-  print "building trie"
-  trie `seq` print "done"
-
-  forM_ [1..1000] $ \_ -> do
-    gen <- fmap mkStdGen randomIO
-    let result = evalTraversal gen trie getRhymes
-    case result of
-      Just vals -> print vals
-      Nothing -> return ()
-
-
-format :: [String] -> String
-format words = intercalate " " words
-
-getRandomWordWithStresses :: Dictionary -> [Stress] -> IO String
-getRandomWordWithStresses dict stresses =
-  case M.lookup stresses dict of
-    Nothing -> error $ "could not find word with pattern " ++ show stresses
-    Just words -> do let len = S.length words
-                     idx <- randomRIO (0, len - 1)
-                     return (S.index words idx)
+  port <- read <$> getEnv "PORT"
+  scotty port $ do
+    middleware logStdoutDev
+    get "/" $ do
+      sonnetLines <- liftIO $ generateSonnet dict trie
+      text $ Text.pack (unlines sonnetLines)
 
 parseLine :: String -> (String, Pronunciation)
 parseLine line =
-  let regex = "^([^ ]*) *(.*)$"
+  let regex = "^([^ ]*) *(.*)$" :: String
       matchResults:_ = line =~ regex :: [[String]]
   in (map toLower (matchResults !! 1), words (matchResults !! 2))

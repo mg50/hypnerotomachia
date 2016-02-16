@@ -20,6 +20,10 @@ library
                      , mtl >= 2.2.1
                      , random >= 1.1
                      , regex-pcre
+                     , scotty
+                     , text >= 1.2.1.3
+                     , transformers >= 0.4.2.0
+                     , wai-extra >= 3.0.13
   default-language:    Haskell2010
 
 executable hypnerotomachia
@@ -28,11 +32,15 @@ executable hypnerotomachia
   default-language:    Haskell2010
   build-depends:       array >= 0.5.1.0
                      , base >= 4.7 && < 5
+                     , containers
                      , hypnerotomachia
                      , mtl >= 2.2.1
                      , random >= 1.1
-                     , containers
                      , regex-pcre
+                     , scotty
+                     , text >= 1.2.1.3
+                     , transformers >= 0.4.2.0
+                     , wai-extra >= 3.0.13
 
 test-suite spec
   type: exitcode-stdio-1.0
@@ -45,4 +53,6 @@ test-suite spec
                  , mtl >= 2.2.1
                  , random >= 1.1
                  , regex-pcre
+                 , text >= 1.2.1.3
+                 , transformers >= 0.4.2.0
   default-language: Haskell2010
