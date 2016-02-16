@@ -13,14 +13,20 @@ syllablesPerLine :: Int
 syllablesPerLine = 10
 
 scansionTemplate :: Int -> StdGen -> ([[Stress]], StdGen)
-scansionTemplate 0 gen = ([], gen)
-scansionTemplate syllables gen = (stresses:restStresses, gen'')
-  where weights = if even syllables then longWeights else shortWeights
-        longestPossible = last . sort $ map (length . snd) weights
-        limit = min syllables longestPossible
-        validWeights = filter (\(_, pat) -> length pat <= limit) weights
-        (stresses, gen') = selectRandomlyFrom validWeights gen
-        (restStresses, gen'') = scansionTemplate (syllables - length stresses) gen'
+scansionTemplate syllables gen = go syllables gen shortWeights --(stresses:restStresses, gen'')
+  where
+    go 0 gen _ = ([], gen)
+    go syllables gen weights =
+      let longestPossible = last . sort $ map (length . snd) weights
+          limit = min syllables longestPossible
+          validWeights = filter (\(_, pat) -> length pat <= limit) weights
+          (stresses, gen') = selectRandomlyFrom validWeights gen
+          otherWeights = if weights == shortWeights then longWeights else shortWeights
+          newWeights = if even (length stresses)
+                       then weights
+                       else otherWeights
+          (restStresses, gen'') = go (syllables - length stresses) gen' newWeights
+      in (stresses:restStresses, gen'')
 
 selectRandomlyFrom :: Weights -> StdGen -> ([Stress], StdGen)
 selectRandomlyFrom options gen =
